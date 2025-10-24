@@ -1,12 +1,26 @@
 <?php
-include 'conexao/conexao.php';
+// Inclui a conexão (volta um nível pois este arquivo está dentro da pasta /api)
+include '../conexao/conexao.php';
 
-$sql = "SELECT nome FROM professores ORDER BY nome";
-$stmt = $conexao->prepare($sql);
-$stmt->execute();
+try {
+    // Busca todos os professores
+    $sql = "SELECT id, nome FROM professores ORDER BY nome";
+    $stmt = $conexao->prepare($sql);
+    $stmt->execute();
 
-$professores = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    // Retorna o resultado como array associativo (id + nome)
+    $professores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-header('Content-Type: application/json');
-echo json_encode($professores);
+    // Retorna em formato JSON
+    header('Content-Type: application/json');
+    echo json_encode($professores);
+    
+} catch (PDOException $e) {
+    // Em caso de erro, retorna um JSON de erro
+    http_response_code(500);
+    echo json_encode([
+        'erro' => true,
+        'mensagem' => 'Erro ao listar professores: ' . $e->getMessage()
+    ]);
+}
 ?>

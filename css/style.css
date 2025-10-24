@@ -7,10 +7,13 @@ body {
 header {
     background-color: #1a2041;
     color: #fff;
-    padding: 15px;
+    padding: 5px;
     text-align: center;
 }
-
+h2 {
+    padding: 0;
+    margin: 10px;
+}
 table {
     border-collapse: collapse;
     width: 95%;
@@ -98,4 +101,26 @@ td {
 td[style*="#1a2041"],
 td[style*="rgb(26, 32, 65)"] {
     color: #fff;
+}
+
+.semana-controles {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.semana-controles button {
+    background-color: #c3002f;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.semana-controles span {
+    font-weight: bold;
+    color: #1a2041;
 }
