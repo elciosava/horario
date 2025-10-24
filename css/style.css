@@ -16,10 +16,11 @@ table {
     width: 95%;
     margin: 30px auto;
     background: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-th, td {
+th,
+td {
     border: 1px solid #ddd;
     text-align: center;
     padding: 8px;
@@ -45,9 +46,10 @@ td.vazio:hover {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 .modal-content {
@@ -62,7 +64,8 @@ td.vazio:hover {
     color: #1a2041;
 }
 
-.modal-content input, .modal-content select {
+.modal-content input,
+.modal-content select {
     width: 100%;
     padding: 8px;
     margin: 5px 0;
@@ -85,4 +88,14 @@ button {
 
 button:hover {
     background: #27306b;
+}
+
+td {
+    color: #111;
+    font-weight: 500;
+}
+
+td[style*="#1a2041"],
+td[style*="rgb(26, 32, 65)"] {
+    color: #fff;
 }
