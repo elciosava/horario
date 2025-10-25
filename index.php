@@ -1,4 +1,6 @@
-<?php include 'conexao/conexao.php'; ?>
+<?php 
+    include 'conexao/conexao.php'; 
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 
