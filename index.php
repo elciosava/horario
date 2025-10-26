@@ -19,9 +19,9 @@
 
     <main>
         <div class="semana-controles">
-            <button id="semana-anterior">⟨ Semana anterior</button>
+            <button id="semana-anterior">◀️ Semana anterior</button>
             <span id="semana-atual"></span>
-            <button id="semana-proxima">Semana seguinte ⟩</button>
+            <button id="semana-proxima">Semana seguinte ▶️</button>
         </div>
 
         <table id="tabela-agenda">
