@@ -3,7 +3,7 @@
     $local = 'localhost';
     $banco = 'horario';
     $usuario = 'root';
-    $senha = '';
+    $senha = 's4va6o841A@';
 
     try{
         $conexao = new PDO("mysql:host=$local;dbname=$banco",$usuario, $senha);
