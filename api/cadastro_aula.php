@@ -89,6 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight: bold;
             color: green;
         }
+                a.voltar {
+            margin-top: 20px;
+            color: #1a2041;
+            text-decoration: none;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -119,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="msg"><?= $mensagem ?></div>
         <?php endif; ?>
     </form>
+     <a href="../index.php" class="voltar">⬅ Voltar ao calendário</a>
 </body>
 
 </html>

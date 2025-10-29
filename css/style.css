@@ -19,7 +19,7 @@ a{
     background-color: #ffffff;
     padding: 10px 20px;
     font-weight: bold;
-    border-radius: 5px;
+    margin-left: 10px;
 }
 h2 {
     padding: 0;
@@ -200,4 +200,24 @@ td > .aula {
     font-weight: 600;
     font-size: 0.9em;
     text-transform: uppercase;
+}
+
+.exportar {
+    width: 95%;
+    max-width: 1200px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    table-layout: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.exportar button {
+    width: auto;
+    height: 45px;
+}
+
+#btn-exportar-pdf, #btn-exportar-img {
+    width: auto;
 }

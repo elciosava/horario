@@ -8,13 +8,16 @@ include 'conexao/conexao.php';
     <meta charset="UTF-8">
     <title>Agendamento de Aulas - SENAI União da Vitória</title>
     <link rel="icon" href="img/senai.png" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <link rel="stylesheet" href="css/style.css">
     </style>
 </head>
 
 <body>
     <header>
-        <h2>📅 Agendamento de Aulas - SENAI União da Vitória</h2><a href="api/cadastro_aula.php">Cadastrar aulas</a>
+        <h2>📅 Agendamento de Aulas - SENAI União da Vitória</h2><div class="cadastra"><a href="api/cadastro_professor.php">Cadastrar professor</a><a href="api/cadastro_aula.php">Cadastrar aulas</a></div>
     </header>
 
     <main>
@@ -42,6 +45,16 @@ include 'conexao/conexao.php';
                 <!-- Preenchido via JS -->
             </tbody>
         </table>
+        <div class="exportar">
+            <button id="btn-exportar-pdf"
+                style="margin:20px auto;display:block;background:#c3002f;color:#fff;border:0;padding:10px 20px;border-radius:5px;cursor:pointer;">
+                📄 Exportar semana em PDF
+            </button>
+            <button id="btn-exportar-img"
+                style="margin:10px auto;display:block;background:#1a2041;color:#fff;border:0;padding:10px 20px;border-radius:5px;cursor:pointer;">
+                🖼️ Exportar semana como imagem
+            </button>
+        </div>
     </main>
 
     <!-- Modal -->
@@ -341,6 +354,38 @@ include 'conexao/conexao.php';
                 alert('Erro: ' + resp.mensagem);
             }
         }
+
+        // 📤 Exportar tabela como PDF
+        document.getElementById('btn-exportar-pdf').addEventListener('click', async () => {
+            const tabela = document.querySelector('#tabela-agenda');
+            const semanaTexto = document.querySelector('#semana-atual').textContent.trim();
+
+            // Cria imagem da tabela
+            const canvas = await html2canvas(tabela, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('l', 'pt', 'a4'); // paisagem
+            const imgWidth = pdf.internal.pageSize.getWidth();
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.text(`Agenda Semanal (${semanaTexto})`, 40, 40);
+            pdf.addImage(imgData, 'PNG', 30, 60, imgWidth - 60, imgHeight);
+            pdf.save(`Agenda_${semanaTexto.replace(/\s/g, '_')}.pdf`);
+        });
+
+        // 📸 Exportar tabela como imagem
+        document.getElementById('btn-exportar-img').addEventListener('click', async () => {
+            const tabela = document.querySelector('#tabela-agenda');
+            const semanaTexto = document.querySelector('#semana-atual').textContent.trim();
+
+            const canvas = await html2canvas(tabela, { scale: 2 });
+            const link = document.createElement('a');
+            link.download = `Agenda_${semanaTexto.replace(/\s/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
 
 
 
