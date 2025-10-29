@@ -1,5 +1,5 @@
-<?php 
-    include 'conexao/conexao.php'; 
+<?php
+include 'conexao/conexao.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -155,6 +155,7 @@
                     ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
                         const linha = document.createElement('tr');
 
+                        // Nome do professor
                         if (turno === 'Manhã') {
                             const tdNome = document.createElement('td');
                             tdNome.rowSpan = 3;
@@ -162,19 +163,32 @@
                             linha.appendChild(tdNome);
                         }
 
+                        // Turno
                         const tdTurno = document.createElement('td');
                         tdTurno.textContent = turno;
                         linha.appendChild(tdTurno);
 
+                        // Dias da semana
                         ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'].forEach(dia => {
                             const td = document.createElement('td');
                             const aula = professores[nome][turno][dia];
 
                             if (aula && aula.descricao) {
-                                td.textContent = aula.sigla || aula.descricao;
-                                td.style.backgroundColor = aula.cor;
-                                td.style.color = '#fff';
+                                // 🔹 Aula existente (com botões editar/excluir)
+                                td.innerHTML = `
+                            <div class="aula" style="background:${aula.cor};color:#fff;">
+                                <span>${aula.sigla || aula.descricao}</span>
+                                <div class="acoes">
+                                    <button class="editar" title="Editar">✏️</button>
+                                    <button class="excluir" title="Excluir">🗑️</button>
+                                </div>
+                            </div>`;
+
+                                // ações
+                                td.querySelector('.editar').addEventListener('click', () => editarAula(aula.id));
+                                td.querySelector('.excluir').addEventListener('click', () => excluirAula(aula.id));
                             } else {
+                                // 🔹 Célula vazia
                                 td.textContent = '+';
                                 td.classList.add('vazio');
                                 td.addEventListener('click', () => abrirModal(nome, turno, dia));
@@ -190,6 +204,7 @@
                 console.error('Erro ao carregar:', erro);
             }
         }
+
 
 
         // 🧠 Abre o modal e preenche dados básicos
@@ -241,7 +256,7 @@
             }
         });
 
-        // 💾 Salvar o agendamento de aula
+        // 💾 Salvar ou editar o agendamento de aula
         document.getElementById('formAula').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -249,16 +264,23 @@
             const segunda = obterSegunda(dataInicioSemana);
             const semanaInicio = segunda.toISOString().split('T')[0];
 
-            // 🧩 Monta os dados para enviar ao PHP
+            // 🧩 Verifica se está editando (dataset.editando é setado pelo editarAula)
+            const idEditando = document.getElementById('formAula').dataset.editando || null;
+
+            // Monta os dados a serem enviados
             const dados = {
+                id: idEditando,
                 tipo_aula_id: document.getElementById('aula_select').value,
                 dia_semana: document.getElementById('dia_semana').value,
                 turno: document.getElementById('turno').value,
-                semana_inicio: semanaInicio // envia a semana exibida
+                semana_inicio: semanaInicio
             };
 
-            // 📤 Envia para o backend
-            const res = await fetch('api/gravar_aula.php', {
+            // Define o endpoint conforme a ação
+            const endpoint = idEditando ? 'api/editar_aula.php' : 'api/gravar_aula.php';
+
+            // 📤 Envia os dados ao backend
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dados)
@@ -268,11 +290,58 @@
 
             if (resp.status === 'ok') {
                 document.getElementById('modal').style.display = 'none';
-                carregarAgenda(); // recarrega tabela da semana atual
+                delete document.getElementById('formAula').dataset.editando; // limpa modo edição
+                document.querySelector('#modal h2').textContent = 'Agendar Aula'; // volta título padrão
+                carregarAgenda(); // recarrega tabela
             } else {
                 alert('Erro: ' + resp.mensagem);
             }
         });
+
+
+        // ✏️ Editar aula
+        function editarAula(id) {
+            fetch(`api/obter_aula.php?id=${id}`)
+                .then(r => r.json())
+                .then(aula => {
+                    document.getElementById('modal').style.display = 'flex';
+                    document.getElementById('professor_select').value = aula.professor_id;
+                    document.getElementById('professor_select').dispatchEvent(new Event('change'));
+
+                    // aguarda o select de aulas carregar antes de selecionar a certa
+                    setTimeout(() => {
+                        document.getElementById('aula_select').value = aula.tipo_aula_id;
+                    }, 300);
+
+                    document.getElementById('dia_semana').value = aula.dia_semana;
+                    document.getElementById('turno').value = aula.turno;
+
+                    // marca que o modal está em modo de edição
+                    document.getElementById('formAula').dataset.editando = id;
+                    document.querySelector('#modal h2').textContent = 'Editar Aula';
+                })
+                .catch(err => console.error('Erro ao obter aula:', err));
+        }
+
+        // 🗑️ Excluir aula
+        async function excluirAula(id) {
+            if (!confirm('Tem certeza que deseja excluir esta aula?')) return;
+
+            const res = await fetch('api/excluir_aula.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+
+            const resp = await res.json();
+
+            if (resp.status === 'ok') {
+                carregarAgenda();
+            } else {
+                alert('Erro: ' + resp.mensagem);
+            }
+        }
+
 
 
         // 🚀 Quando a página carregar, inicializa tudo
