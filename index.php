@@ -132,63 +132,86 @@ include 'conexao/conexao.php';
         });
 
         async function carregarAgenda() {
-            const corpo = document.getElementById('corpo-tabela');
-            corpo.innerHTML = '';
+    const corpo = document.getElementById('corpo-tabela');
+    corpo.innerHTML = '';
 
-            try {
-                // 🔹 Calcula a segunda-feira da semana exibida
-                const segunda = obterSegunda(dataInicioSemana);
-                const semanaInicio = segunda.toISOString().split('T')[0]; // formato YYYY-MM-DD
+    try {
+        // 🔹 Calcula a segunda-feira da semana exibida
+        const segunda = obterSegunda(dataInicioSemana);
+        const semanaInicio = segunda.toISOString().split('T')[0]; // formato YYYY-MM-DD
 
-                // 🔹 Busca professores e aulas da semana atual
-                const [profResp, aulaResp] = await Promise.all([
-                    fetch('api/listar_professores.php').then(r => r.json()),
-                    fetch(`api/listar_aulas.php?semana_inicio=${semanaInicio}`).then(r => r.json())
-                ]);
+        // 🔹 Busca professores e aulas da semana atual
+        const [profResp, aulaResp] = await Promise.all([
+            fetch('api/listar_professores.php').then(r => r.json()),
+            fetch(`api/listar_aulas.php?semana_inicio=${semanaInicio}`).then(r => r.json())
+        ]);
 
-                console.log('📘 Professores recebidos:', profResp);
-                console.log('📅 Aulas recebidas:', aulaResp);
+        console.log('📘 Professores recebidos:', profResp);
+        console.log('📅 Aulas recebidas:', aulaResp);
 
-                // Cria estrutura base
-                const professores = {};
-                profResp.forEach(p => {
-                    professores[p.nome] = { Manhã: {}, Tarde: {}, Noite: {} };
-                });
+        // Cria estrutura base
+        const professores = {};
+        profResp.forEach(p => {
+            professores[p.nome] = { Manhã: {}, Tarde: {}, Noite: {} };
+        });
 
-                // Adiciona aulas existentes (se houver)
-                aulaResp.forEach(aula => {
-                    if (!professores[aula.professor]) {
-                        professores[aula.professor] = { Manhã: {}, Tarde: {}, Noite: {} };
+        // Adiciona aulas existentes (se houver)
+        aulaResp.forEach(aula => {
+            if (!professores[aula.professor]) {
+                professores[aula.professor] = { Manhã: {}, Tarde: {}, Noite: {} };
+            }
+            professores[aula.professor][aula.turno][aula.dia_semana] = aula;
+        });
+
+        // 🔹 Gera dias da semana com data
+        const diasSemana = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+        const diasComDatas = diasSemana.map((sigla, i) => {
+            const data = new Date(segunda);
+            data.setDate(segunda.getDate() + i);
+            const diaMes = data.getDate().toString().padStart(2, '0');
+            const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+            return { sigla, data, label: `${sigla} ${diaMes}/${mes}` };
+        });
+
+        // 🔹 Atualiza o cabeçalho com dia + data
+        const theadRow = document.querySelector('#tabela-agenda thead tr');
+        theadRow.innerHTML = `
+            <th>Professor</th>
+            <th>Turno</th>
+            ${diasComDatas.map(d => `<th>${d.label}</th>`).join('')}
+        `;
+
+        // 🔹 Dia atual (para destaque visual)
+        const hoje = new Date();
+        const hojeStr = hoje.toISOString().split('T')[0];
+
+        // 🔹 Monta a tabela
+        for (const nome in professores) {
+            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+                const linha = document.createElement('tr');
+
+                if (turno === 'Manhã') {
+                    const tdNome = document.createElement('td');
+                    tdNome.rowSpan = 3;
+                    tdNome.textContent = nome;
+                    linha.appendChild(tdNome);
+                }
+
+                const tdTurno = document.createElement('td');
+                tdTurno.textContent = turno;
+                linha.appendChild(tdTurno);
+
+                diasComDatas.forEach(d => {
+                    const td = document.createElement('td');
+                    const aula = professores[nome][turno][d.sigla];
+
+                    // 🔸 Destaca o dia atual com um leve traço azul SENAI
+                    if (d.data.toISOString().split('T')[0] === hojeStr) {
+                        td.style.borderBottom = '3px solid #007bff';
                     }
-                    professores[aula.professor][aula.turno][aula.dia_semana] = aula;
-                });
 
-                // Monta a tabela
-                for (const nome in professores) {
-                    ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
-                        const linha = document.createElement('tr');
-
-                        // Nome do professor
-                        if (turno === 'Manhã') {
-                            const tdNome = document.createElement('td');
-                            tdNome.rowSpan = 3;
-                            tdNome.textContent = nome;
-                            linha.appendChild(tdNome);
-                        }
-
-                        // Turno
-                        const tdTurno = document.createElement('td');
-                        tdTurno.textContent = turno;
-                        linha.appendChild(tdTurno);
-
-                        // Dias da semana
-                        ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'].forEach(dia => {
-                            const td = document.createElement('td');
-                            const aula = professores[nome][turno][dia];
-
-                            if (aula && aula.descricao) {
-                                // 🔹 Aula existente (com botões editar/excluir)
-                                td.innerHTML = `
+                    if (aula && aula.descricao) {
+                        td.innerHTML = `
                             <div class="aula" style="background:${aula.cor};color:#fff;">
                                 <span>${aula.sigla || aula.descricao}</span>
                                 <div class="acoes">
@@ -196,27 +219,26 @@ include 'conexao/conexao.php';
                                     <button class="excluir" title="Excluir">🗑️</button>
                                 </div>
                             </div>`;
+                        td.querySelector('.editar').addEventListener('click', () => editarAula(aula.id));
+                        td.querySelector('.excluir').addEventListener('click', () => excluirAula(aula.id));
+                    } else {
+                        td.textContent = '+';
+                        td.classList.add('vazio');
+                        td.addEventListener('click', () => abrirModal(nome, turno, d.sigla));
+                    }
 
-                                // ações
-                                td.querySelector('.editar').addEventListener('click', () => editarAula(aula.id));
-                                td.querySelector('.excluir').addEventListener('click', () => excluirAula(aula.id));
-                            } else {
-                                // 🔹 Célula vazia
-                                td.textContent = '+';
-                                td.classList.add('vazio');
-                                td.addEventListener('click', () => abrirModal(nome, turno, dia));
-                            }
+                    linha.appendChild(td);
+                });
 
-                            linha.appendChild(td);
-                        });
-
-                        corpo.appendChild(linha);
-                    });
-                }
-            } catch (erro) {
-                console.error('Erro ao carregar:', erro);
-            }
+                corpo.appendChild(linha);
+            });
         }
+
+    } catch (erro) {
+        console.error('Erro ao carregar:', erro);
+    }
+}
+
 
 
 
