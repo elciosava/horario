@@ -9,6 +9,7 @@ if (!$data) {
     exit;
 }
 
+$uc_id = $data['uc_id'] ?? null;
 $tipo_aula_id = $data['tipo_aula_id'] ?? null;
 $dia = $data['dia_semana'] ?? null;
 $turno = $data['turno'] ?? null;
@@ -52,12 +53,12 @@ try {
         $cor = $stmtCor->fetchColumn() ?: '#1a2041';
 
         // Insere novo registro
-        $sql = "INSERT INTO aulas_agendadas 
-                (tipo_aula_id, dia_semana, turno, cor, semana_inicio)
-                VALUES (:tipo, :dia, :turno, :cor, :semana)";
+        $sql = "INSERT INTO aulas_agendadas (tipo_aula_id, uc_id, dia_semana, turno, cor, semana_inicio)
+        VALUES (:tipo, :uc, :dia, :turno, :cor, :semana)";
         $stmt = $conexao->prepare($sql);
         $stmt->execute([
             ':tipo' => $tipo_aula_id,
+            ':uc' => $uc_id,
             ':dia' => $dia,
             ':turno' => $turno,
             ':cor' => $cor,

@@ -9,12 +9,24 @@ if (!$id) {
 }
 
 try {
-    $sql = "SELECT a.id, a.tipo_aula_id, a.dia_semana, a.turno, t.professor_id
+    $sql = "SELECT 
+                a.id,
+                a.tipo_aula_id,
+                a.uc_id,
+                a.dia_semana,
+                a.turno,
+                a.semana_inicio,
+                t.professor_id,
+                t.sigla,
+                t.descricao,
+                u.nome AS uc_nome
             FROM aulas_agendadas a
-            JOIN tipos_aula t ON t.id = a.tipo_aula_id
+            LEFT JOIN tipos_aula t ON t.id = a.tipo_aula_id
+            LEFT JOIN unidades_curriculares u ON u.id = a.uc_id
             WHERE a.id = :id";
     $stmt = $conexao->prepare($sql);
     $stmt->execute([':id' => $id]);
+
     $aula = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($aula) {
